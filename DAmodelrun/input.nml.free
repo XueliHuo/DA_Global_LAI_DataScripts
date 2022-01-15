@@ -1,0 +1,385 @@
+&perfect_model_obs_nml
+   read_input_state_from_file = .true.
+   write_output_state_to_file = .false.
+   async                      =  0
+   init_time_days             = -1
+   init_time_seconds          = -1
+   first_obs_days             = -1
+   first_obs_seconds          = -1
+   last_obs_days              = -1
+   last_obs_seconds           = -1
+   output_interval            =  1
+   single_file_in             = .false.
+   single_file_out            = .false.
+   input_state_files          = 'clm_restart.nc', 'clm_history.nc'
+   output_state_files         = 'restart_out.nc', 'history_out.nc'
+   obs_seq_in_file_name       = 'obs_seq.in'
+   obs_seq_out_file_name      = 'obs_seq.out'
+   adv_ens_command            = "no_advance_script"
+   output_timestamps          = .false.
+   trace_execution            = .true.
+   output_forward_op_errors   = .false.
+   print_every_nth_obs        = -1
+   silence                    = .false.
+   /
+
+
+&filter_nml
+   async                    = 0
+   adv_ens_command          = "no_advance_script"
+   ens_size                 = 60
+   obs_sequence_in_name     = "obs_seq.out"
+   obs_sequence_out_name    = "obs_seq.final"
+   input_state_file_list    = "restart_files.txt",
+                              "history_files.txt"
+   output_state_file_list   = "restart_files.txt",
+                              "history_files.txt"
+   init_time_days           = -1
+   init_time_seconds        = -1
+   first_obs_days           = -1
+   first_obs_seconds        = -1
+   last_obs_days            = -1
+   last_obs_seconds         = -1
+   num_output_state_members = 60
+   num_output_obs_members   = 60
+   output_interval          = 1
+   num_groups               = 1
+   compute_posterior        = .true.
+   output_forward_op_errors = .false.
+   output_timestamps        = .true.
+   trace_execution          = .true.
+   silence                  = .false.
+
+   stages_to_write          = 'preassim', 'output'
+   output_members           = .true.
+   output_mean              = .true.
+   output_sd                = .true.
+   write_all_stages_at_end  = .false.
+
+   inf_flavor                  = 0,                       0
+   inf_initial_from_restart    = .true.,                 .false.
+   inf_sd_initial_from_restart = .true.,                 .false.
+   inf_deterministic           = .true.,                  .true.
+   inf_initial                 = 1.0,                     1.0
+   inf_lower_bound             = 1.0,                     1.0
+   inf_upper_bound             = 100.0,               1000.0
+   inf_damping                 = 0.9,                     0.9
+   inf_sd_initial              = 0.6,                     0.6
+   inf_sd_lower_bound          = 0.6,                     0.6
+   inf_sd_max_change           = 1.05,                    1.05
+   /
+
+
+&quality_control_nml
+   input_qc_threshold = 1.0
+   outlier_threshold  = 6.0
+   /
+
+
+&dart_to_clm_nml
+   input_dart_file    = 'dart_posterior.nc'
+   clm_file_to_update = 'clm_restart_file.nc'
+   /
+
+
+&fill_inflation_restart_nml
+   write_prior_inf = .true.
+   prior_inf_mean  = 1.00
+   prior_inf_sd    = 0.6
+
+   write_post_inf  = .false.
+   post_inf_mean   = 1.00
+   post_inf_sd     = 0.6
+
+   input_state_files = 'clm_restart.nc', 'clm_history.nc'
+   single_file       = .false.
+   verbose           = .false.
+   /
+
+
+&smoother_nml
+   num_lags              = 0
+   start_from_restart    = .false.
+   output_restart        = .false.
+   restart_in_file_name  = 'smoother_ics'
+   restart_out_file_name = 'smoother_restart'
+   /
+
+
+# cutoff of 0.03 (radians) is about 200km
+&assim_tools_nml
+   filter_kind                     = 1
+   cutoff                          = 0.015
+   sort_obs_inc                    = .false.
+   spread_restoration              = .false.
+   sampling_error_correction       = .false.
+   adaptive_localization_threshold = -1
+   output_localization_diagnostics = .false.
+   localization_diagnostics_file   = 'localization_diagnostics'
+   print_every_nth_obs             = 1000
+   /
+
+
+&ensemble_manager_nml
+   layout = 2
+   tasks_per_node = 36
+   /
+
+
+&cov_cutoff_nml
+   select_localization = 1
+   /
+
+
+&reg_factor_nml
+   select_regression    = 1
+   input_reg_file       = 'time_mean_reg'
+   save_reg_diagnostics = .false.
+   reg_diagnostics_file = 'reg_diagnostics'
+   /
+
+
+&obs_sequence_nml
+   write_binary_obs_sequence = .false.
+   /
+
+
+&preprocess_nml
+    input_obs_kind_mod_file = '../../../assimilation_code/modules/observations/DEFAULT_obs_kind_mod.F90'
+   output_obs_kind_mod_file = '../../../assimilation_code/modules/observations/obs_kind_mod.f90'
+     input_obs_def_mod_file = '../../../observations/forward_operators/DEFAULT_obs_def_mod.F90'
+    output_obs_def_mod_file = '../../../observations/forward_operators/obs_def_mod.f90'
+   input_files              = '../../../observations/forward_operators/obs_def_land_mod.f90',
+                              '../../../observations/forward_operators/obs_def_tower_mod.f90',
+                              '../../../observations/forward_operators/obs_def_COSMOS_mod.f90'
+   /
+
+
+# hist_nhtfrq should be negative (hours) ... same context as in
+# the CLM namelist for the .h1. files.
+&obs_def_tower_nml
+   casename    = "clm5.0.06_f09_freerundecade_LAI_e60",
+   hist_nhtfrq = -1,
+   debug       = .false.
+   /
+
+
+&obs_kind_nml
+   assimilate_these_obs_types = 'null'
+   evaluate_these_obs_types = 'GIMMS_LEAF_AREA_INDEX'
+   /
+
+
+# Each variable must have 6 entries.
+# 1: variable name
+# 2: DART KIND
+# 3: minimum value - as a character string - if none, use 'NA'
+# 4: maximum value - as a character string - if none, use 'NA'
+# 5: what file contains the variable - 'restart', 'history'  file'
+# 6: does the variable get updated in the restart file or not ...
+#    only variables from restart files may be updated.
+#    'UPDATE' =>        update the variable in the restart file
+#    'NO_COPY_BACK' => do not update the variable in the restart file
+#    all these variables will be updated INTERNALLY IN DART
+#    only variables marked '.r', 'UPDATE' will be modified for CLM.
+
+&model_nml
+   clm_restart_filename         = 'clm_restart.nc'
+   clm_history_filename         = 'clm_history.nc'
+   clm_vector_history_filename  = 'clm_vector_history.nc'
+   assimilation_period_days     = 2
+   assimilation_period_seconds  = 3600
+   calendar                     = 'gregorian'
+   debug                        = 0
+   clm_variables  = 'leafc',       'QTY_LEAF_CARBON',            '0.0', '1081.44',   'restart', 'UPDATE',
+                    'TLAI',        'QTY_LEAF_AREA_INDEX',        '0.0', '20.71',    'history', 'UPDATE',
+   /
+# The maximum clamping values for leafc,tlai are calculated by 
+# applying 1.5 multiplier to the maximum value of 60 ensemble restart file in 2000-01-15-00000.nc
+# The minimum clamping values for leafc,tlai are calculated by 
+# applying 0.5 multiplier to the maximum value of 60 ensemble restart file in 2000-01-15-00000.nc
+
+#  'frootc',      'QTY_ROOT_CARBON',                '0.0', '1460', 'restart', 'UPDATE',
+#  'leafc',       'QTY_LEAF_CARBON',                '0.0', '1082', 'restart', 'UPDATE',
+#  'livecrootc',  'QTY_ROOT_CARBON',                '0.0',   'NA', 'restart', 'UPDATE',
+#  'deadcrootc',  'QTY_ROOT_CARBON',                '0.0',   'NA', 'restart', 'UPDATE',
+#  'livestemc',   'QTY_ROOT_CARBON',                '0.0',   'NA', 'restart', 'UPDATE',
+#  'deadstemc',   'QTY_STEM_CARBON',                '0.0',   'NA', 'restart', 'UPDATE',
+#  'frootn',      'QTY_ROOT_NITROGEN',              '0.0',   '32', 'restart', 'UPDATE',
+#  'leafn',       'QTY_LEAF_NITROGEN',              '0.0',   '36', 'restart', 'UPDATE',
+#  'livecrootn',  'QTY_ROOT_NITROGEN',              '0.0',   'NA', 'restart', 'UPDATE',
+#  'deadcrootn',  'QTY_ROOT_NITROGEN',              '0.0',   'NA', 'restart', 'UPDATE',
+#  'livestemn',   'QTY_STEM_NITROGEN',              '0.0',   'NA', 'restart', 'UPDATE',
+#  'deadstemn',   'QTY_STEM_NITROGEN',              '0.0',   'NA', 'restart', 'UPDATE',
+#  'cpool',       'QTY_CARBON',                     '0.0',   'NA', 'restart', 'UPDATE',
+#  'litr1c_vr',   'QTY_SOIL_CARBON',                '0.0',   'NA', 'restart', 'UPDATE',
+#  'litr2c_vr',   'QTY_SOIL_CARBON',                '0.0',   'NA', 'restart', 'UPDATE',
+#  'litr3c_vr',   'QTY_SOIL_CARBON',                '0.0',   'NA', 'restart', 'UPDATE',
+#  'litr1n_vr',   'QTY_SOIL_NITROGEN',              '0.0',   'NA', 'restart', 'UPDATE',
+#  'litr2n_vr',   'QTY_SOIL_NITROGEN',              '0.0',   'NA', 'restart', 'UPDATE',
+#  'litr3n_vr',   'QTY_SOIL_NITROGEN',              '0.0',   'NA', 'restart', 'UPDATE',
+#  'T_SOISNO',    'QTY_SOIL_TEMPERATURE',           'NA' ,   'NA', 'restart', 'UPDATE',
+#  'H2OSOI_LIQ',  'QTY_SOIL_LIQUID_WATER',          '0.0',   'NA', 'restart', 'UPDATE',
+#  'H2OSOI_ICE',  'QTY_SOIL_ICE',                   '0.0',   'NA', 'restart', 'UPDATE',
+#  'frac_sno',    'QTY_SNOWCOVER_FRAC',             'NA' ,   'NA', 'restart', 'NO_COPY_BACK',
+#  'H2OSNO',      'QTY_SNOW_WATER',                 '0.0',   'NA', 'restart', 'UPDATE',
+#  'SNOW_DEPTH',  'QTY_SNOW_THICKNESS',             'NA' ,   'NA', 'restart', 'UPDATE',
+#  'ZWT',         'QTY_WATER_TABLE_DEPTH',          'NA' ,   'NA', 'restart', 'NO_COPY_BACK',
+#  'EFLX_LH_TOT', 'QTY_LATENT_HEAT_FLUX',           'NA',    'NA', 'history', 'NO_COPY_BACK',
+#  'NEP',         'QTY_NET_CARBON_PRODUCTION',      'NA' ,   'NA', 'history', 'NO_COPY_BACK',
+#  'FSIF',        'QTY_SOLAR_INDUCED_FLUORESCENCE', '0.0',   'NA', 'history', 'NO_COPY_BACK',
+#  'LAI240_VALUE','QTY_LEAF_AREA_INDEX',            '0.0',   'NA', 'history', 'NO_COPY_BACK',
+#  'TV',          'QTY_VEGETATION_TEMPERATURE',     'NA' ,   'NA', 'vector' , 'NO_COPY_BACK',
+#  'RH2M_R',      'QTY_SPECIFIC_HUMIDITY',          'NA' ,   'NA', 'vector' , 'NO_COPY_BACK',
+#  'PBOT',        'QTY_SURFACE_PRESSURE',           'NA' ,   'NA', 'vector' , 'NO_COPY_BACK',
+#  'TBOT',        'QTY_TEMPERATURE',                'NA' ,   'NA', 'vector' , 'NO_COPY_BACK',
+#  'LAIP',        'QTY_LEAF_AREA_INDEX',            'NA' ,   'NA', 'vector' , 'NO_COPY_BACK'
+#  'FSDSVD',      'QTY_PAR_DIRECT',                 '0.0',   'NA', 'history', 'NO_COPY_BACK',
+#  'FSDSVI',      'QTY_PAR_DIFFUSE',                '0.0',   'NA', 'history', 'NO_COPY_BACK',
+#  'PARVEG',      'QTY_ABSORBED_PAR',               '0.0',   'NA', 'history', 'NO_COPY_BACK',
+
+&location_nml
+   horiz_dist_only             = .true.
+   vert_normalization_pressure = 100000.0
+   vert_normalization_height   = 10000.0
+   vert_normalization_level    = 20.0
+   approximate_distance        = .false.
+   nlon                        = 71
+   nlat                        = 36
+   output_box_info             = .true.
+   /
+
+
+&utilities_nml
+   TERMLEVEL = 2
+   module_details = .false.
+   logfilename = 'dart_log.out'
+   nmlfilename = 'dart_log.nml'
+   write_nml   = 'file'
+   /
+
+
+&mpi_utilities_nml
+   /
+
+
+# The times in the namelist for the obs_diag program are vectors
+# that follow the following sequence:
+# year   month   day   hour   minute   second
+# max_num_bins can be used to specify a fixed number of bins
+# in which case last_bin_center should be safely in the future.
+#
+# Acceptable latitudes range from  [-90,  90]
+# Acceptable longitudes range from [  0, Inf]
+
+&obs_diag_nml
+   obs_sequence_name = ''
+   obs_sequence_list = 'file_list_clm5.0.06_f09_assim_inf_interpobsth6updatehist_LAI_global_e60_2000year.txt'
+   first_bin_center =  2000, 1,  16, 0, 0, 0
+   last_bin_center  =  2000, 11,  11, 0, 0, 0
+   bin_separation   =     0, 0,  15, 0, 0, 0
+   bin_width        =     0, 0,  13, 0, 0, 0
+   time_to_skip     =     0, 0,  0, 0, 0, 0
+   max_num_bins     = 1000
+   trusted_obs      = 'null'
+   Nregions   = 1
+   lonlim1    =     0.0
+   lonlim2    =   360.0
+   latlim1    =   -90.0
+   latlim2    =    90.0
+   reg_names  = 'Global'
+   hlevel_edges =  0.000000, 0.000025, 0.000065, 0.000125, 0.000210,
+                   0.000330, 0.000490, 0.000690, 0.000930, 0.001210
+   print_mismatched_locs = .false.
+   create_rank_histogram = .true.
+   outliers_in_histogram = .true.
+   use_zero_error_obs    = .false.
+   verbose               = .true.
+   /
+
+#   hlevel_edges =  0.000000, 0.000025, 0.000065, 0.000125, 0.000210,
+#                   0.000330, 0.000490, 0.000690, 0.000930, 0.001210
+
+&obs_sequence_tool_nml
+   filename_seq      = ''
+   filename_seq_list = 'pieces.txt'
+   filename_out      = 'obs_seq.combined'
+   print_only        = .false.
+   gregorian_cal     = .true.
+   synonymous_qc_list = 'COSMOS QC','Ameriflux QC'
+   /
+
+
+&obs_loop_nml
+   filename_in   = 'obs_seq.out'
+   filename_out  = 'obs_seq.loop'
+   target_year   = 2013
+   target_month  = 7
+   target_day    = 1
+   /
+
+
+&schedule_nml
+   calendar        = 'Gregorian'
+   first_bin_start =  2000,  1,   9, 12,  0,  0
+   first_bin_end   =  2000,  1,   22,  12,  0,  0
+   last_bin_end    =  2001,  1,   2, 12,  0,  0
+   bin_interval_days    = 15
+   bin_interval_seconds = 0
+   max_num_bins         = 1000
+   print_table          = .true.
+   /
+
+
+&obs_seq_to_netcdf_nml
+   obs_sequence_name = ''
+   obs_sequence_list = 'file_list_clm5.0.06_f09_assim_inf_th3updatehist_LAI_global_e60_2000year.txt'
+   append_to_netcdf  = .false.
+   lonlim1    =    0.0
+   lonlim2    =  360.0
+   latlim1    =  -90.0
+   latlim2    =   90.0
+   verbose    = .true.
+   /
+
+
+&model_mod_check_nml
+   num_ens               = 1
+   input_state_files     = 'clm_restart.nc', 'clm_history.nc'
+   output_state_files    = 'mmc_output1.nc', 'mmc_output2.nc'
+   test1thru             = 0
+   run_tests             = 1,2,3,4,7
+   x_ind                 = 6691574
+   loc_of_interest       = 254.724947, 39.978080, 0.039
+   quantity_of_interest  = 'QTY_LEAF_CARBON'
+   interp_test_vertcoord = 'VERTISHEIGHT'
+   interp_test_lonrange  = 0.0, 180.0
+   interp_test_dlon      = 1.0
+   interp_test_latrange  = 0.0, 90.0
+   interp_test_dlat      = 1.0
+   interp_test_vertrange = 0.0, 0.2
+   interp_test_dvert     = 0.1
+   verbose               = .true.
+  /
+
+
+&state_vector_io_nml
+  /
+
+
+# assimilation_code/programs/compare_states contains a utility that can be used
+# to compare two netCDF files.
+# echo file1.nc file2.nc | compare_states_nml
+
+&compare_states_nml
+   debug                   = .false.
+   fail_on_missing_field   = .false.
+   do_all_numeric_fields   = .true.
+   only_report_differences = .true.
+  /
+
+
+&clean_forcing_nml
+   year      = 2008
+   criterion = 100.0
+  /
