@@ -49,23 +49,24 @@ The repository includes two folders.
       See https://github.com/ESCOMP/CTSM/issues/756 for more details).
 
 
-   c. The four datm.streams.txt* files with a proprietary format of the text inside record the information of the forcing data we used.
+   c. The four datm.streams.txt* files with a proprietary format of the text inside record the information of the CAM reanalysis forcing data we used. 
+      Check here https://rda.ucar.edu/datasets/ds199.1/ for more details of the forcing data.
 
 
-2. Analysis consists of data and scripts used to generate the figures and table in the manuscript.
+2. The folder Analysis consists of matlab scripts used to plot the figures and table in the manuscript.
 
-###########################################################
-   The mat data has a size of 13GB. You can download the mat data from ######## 
-###########################################################
-
+   The total size of all mat data and the netcdf data used in the matlab scripts is 13GB. You can download all the mat data from 
+   https://data.cyverse.org/dav-anon/iplant/home/huoxl90/DA_Global_LAI_DataScripts_AnalysisData/
    The data stored in mat format are extracted from the model outputs which are in netcdf format.
    Since the model outputs are in a very large size (7TB in total), we decided to preserve them on NCAR's HPC.
    If you have a NCAR HPC account, you can access the model outputs under the campaign storage.
    Go to /glade/campaign/cisl/dares/huoxl/ctsm/clm5.0.06_f09_assim_inf_fitpobsth6updatehist_LAI_e60/run for the data assimilation model output, 
    and /glade/campaign/cisl/dares/huoxl/ctsm/clm5.0.06_f09_freerundecade_LAI_e60/run for the default or freerun model output.
+   The netcdf file LAI3g_Bimonthly_2000_2016_CLMgrid.nc contains the GIMMS LAI3g data which is the observation of LAI assimilated into CLM5.
 
-   You can git clone or download the repository to your machine and use or execute the matlab scripts in the Analysis folder.
-   Before you execute the matlab scripts in matlab on your machine to generate the figures in the manuscript,
+   You can git clone or download the repository to your machine and read the matlab scripts in the Analysis folder.
+   In order to execute the matlab scripts you need to download the mat data from the link mentioned above.
+   Before you execute the matlab scripts on your machine to generate the figures in the manuscript,
    please modify the basedir in the matlab scrpits to be the path where the mat data downloaded on your machine.
 
 
